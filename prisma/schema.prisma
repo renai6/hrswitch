@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  email       String    @unique @db.VarChar(100)
+  userName    String    @unique @db.VarChar(20)
+  password    String    @db.VarChar(100)
+  name        String    @db.VarChar(40)
+  userTypeId  Int
+  role        Role      @default(USER)
+  createdAt   DateTime  @default(now())
+
+  @@index([id, userName, email])
+}
+
+model Comapny {
+  id            Int       @id @default(autoincrement())
+  name          String    @unique
+  address       String   
+  phone         String
+  createdAt     DateTime  @default(now())
+  businessUnits BusinessUnit[]
+
+  @@index([id])
+}
+
+model BusinessUnit {
+  id        Int       @id @default(autoincrement())
+  companyId Int
+  name      String    @unique
+  address   String   
+  phone     String
+  createdAt DateTime  @default(now())
+  employees Employee[]
+  company   Comapny   @relation(fields: [companyId], references: [id])
+
+  @@index([name])
+}
+
+model Employee {
+  id                Int       @id @default(autoincrement())
+  businessUnitId    Int
+  name              String    @unique
+  address           String     
+  phone             String
+  SSSNumber         String
+  PhilHealthNumber  String
+  TaxIdNumber       String
+  createdAt         DateTime  @default(now())
+  businessUnit      BusinessUnit  @relation(fields: [businessUnitId], references: [id])
+  timelogs          Timelogs[]
+  absences          Absences[]
+
+  @@index([name, id])
+}
+
+model Timelogs {
+  id          Int      @id @default(autoincrement())
+  employeeId  Int
+  timeIn      String   
+  timeOut     String 
+  hours       Float
+  createdAt   DateTime @default(now())
+  employee    Employee @relation(fields: [employeeId], references: [id])
+
+  @@index([id])
+}
+
+model Absences {
+  id          Int           @id @default(autoincrement())
+  absenceType AbsenceType   @default(HOLIDAYLEAVE)
+  employeeId  Int           
+  createdAt   DateTime      @default(now())
+  employee    Employee      @relation(fields: [employeeId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum AbsenceType {
+  SICKLEAVE
+  HOLIDAYLEAVE
+  AWOL
+}
